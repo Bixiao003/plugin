@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>时间插件</title>
+	<style>
+		#calendar{
+			margin-top: 15px;
+			height: 500px;
+			width: 400px;
+			background-color: rgba(255,1,1,0.5);
+		}
+		#todayTime{
+			font-size: 38px;
+			color: white;
+			margin-left: 15px;
+		}
+		#todayDate{
+			font-size: 22px;
+    	color: black;
+    	margin-left: 15px;
+		}
+		table{
+			margin:45px auto;
+			 border-collapse:collapse;
+		}
+		table th{
+			background-color: white;
+			height: 40px;
+			width: 50px;
+			border: 1px solid black;
+		}
+		table td{
+			background-color: white;
+			height: 40px;
+			width: 50px;
+			border: 1px solid black;
+			text-align: center;
+			color: black;
+		}
+		#tools{
+			overflow: hidden;
+		}
+
+		.l{
+			margin-top: 25px;
+			float: left;
+			margin-left: 20px;
+		}
+		select{
+			width: 60px;
+		}
+		.r{
+			margin-top: 25px;
+			float: left;
+			margin-left:120px;
+		}
+		.r span{
+				display: block;
+				float: right;
+				height: 20px;
+				width: 40px;
+				background-color: #eee;
+				line-height: 20px;
+				text-align: center;
+				margin-right: 10px;
+				font-weight: bold;
+		}
+
+	</style>
+</head>
+<body>
+	<input type="text" id="text">
+	<div id="calendar">
+		<div id="todayTime"></div>
+		<div id="todayDate"></div>
+
+		<div id="tools">
+			<div class="l">
+				<select id="selectYear"></select>年
+				<select id="selectMonth"></select>月
+			</div>
+			<div class="r">
+				<span id="nextMonth">></span>
+				<span id="prevMonth"><</span>
+				
+			</div>
+		</div>
+		<table id="showTable">
+			<thead>
+				<tr>
+					<th>日</th>
+					<th>一</th>
+					<th>二</th>
+					<th>三</th>
+					<th>四</th>
+					<th>五</th>
+					<th>六</th>
+				</tr>
+			</thead>
+			<tbody></tbody>
+		</table>
+	</div>
+	<script>
+		var date = new Date();
+		var year = date.getFullYear();
+		var mon = date.getMonth()+1;
+		var today = date.getDate();
+		var day = date.getDay();
+		var hours = date.getHours();
+		var mins = date.getMinutes();
+		var sec = date.getSeconds();
+		var selectYearElement = document.querySelector('#selectYear');
+		var selectMonthElement = document.querySelector('#selectMonth');
+		var showTableElement = document.querySelector('#showTable');
+		var prevMonthElement = document.querySelector('#prevMonth');
+		var nextMonthElement = document.querySelector('#nextMonth');
+		var todayDate = document.querySelector('#todayDate');
+		var todayTime = document.querySelector('#todayTime');
+		var text = document.querySelector('#text');
+		
+		//初始化
+		init();
+			
+		function init() {	
+			var dateStr = `${year}年${mon}月${today}日 ${getWeek(day)}`;
+			todayDate.innerHTML = dateStr;
+			updateTime();
+			showTable();
+		}
+
+		//每秒更新时间
+		function updateTime() {
+			var str = add0(hours)+':'+add0(mins)+':'+add0(sec);
+			todayTime.innerHTML = str;
+			setInterval(function () {
+				var date = new Date();
+				var hours = date.getHours();
+				var mins = date.getMinutes();
+				var sec = date.getSeconds();
+				var todayTime = document.querySelector('#todayTime');
+				var str = add0(hours)+':'+add0(mins)+':'+add0(sec);
+				todayTime.innerHTML = str;
+			},500);
+		}
+			
+		//动态生成选择年的select
+		for (var i = 1970; i < 2020; i++) {
+			var option = document.createElement('option');
+			option.value = i;
+			option.innerHTML = i ;
+			if (i == year) {
+				option.selected = true;
+			}
+			selectYearElement.appendChild(option);
+		}
+
+		//动态生成选择月的select
+		for (var i = 1; i < 13; i++) {
+			var option = document.createElement('option');
+			option.value = i;
+			option.innerHTML = i ;
+			if (i == mon) {
+				option.selected = true;
+			}
+			selectMonthElement.appendChild(option);
+		}
+			
+		//选择年
+		selectYearElement.onchange = function () {
+			year = this.value;
+			showTable();
+			showOption();
+		}
+
+		//选择月
+		selectMonthElement.onchange = function () {
+			mon = this.value;
+			showTable();
+			showOption();
+		}
+
+		//上一个月
+		prevMonth.onclick = function () {
+			mon--;
+			showTable();
+			showOption();
+		}
+
+		//下一个月
+		nextMonthElement.onclick = function () {
+			mon++;
+			showTable();
+			showOption();
+		}
+
+		//根据当前日期变化改变option的值
+		function showOption() {
+			var date =new Date(year,mon-1);
+			var sy = date.getFullYear();
+			var sm = date.getMonth()+1;
+			var options = selectYearElement.getElementsByTagName('option');
+			for (var i = 0; i < options.length; i++) {
+				if (options[i].value == sy) {
+					options[i].selected = true;
+				}
+			}
+
+			var options = selectMonthElement.getElementsByTagName('option');
+			for (var i = 0; i < options.length; i++) {
+				if (options[i].value == sm) {
+						
+					options[i].selected = true;
+				}
+			}
+
+		}
+
+			//根据当前的年、月生成日历内容
+			function showTable() {
+				showTableElement.tBodies[0].innerHTML = '';
+				//根据当前需要显示的年和月来创建日历
+				//创建一个要显示的年月的下一个的日期对象
+				var date1 = new Date(year,mon,1,0,0,0);
+				//对于下个月的1号0时0分0秒的时间 -1得到要显示的年月的最后一天的时间
+				var date2 = new Date(date1.getTime() -1);
+				//得到要显示的年月的总天数
+				var showMonthDays = date2.getDate();
+				//获取要显示的年月的1日的星期，从0开始的星期
+				date2.setDate(1);
+				//showMonthWeek表示这个月的1日的星期，也可以作为表格中前面空白的单元格的个数
+				var showMonthWeek = date2.getDay();
+				var cells = 7;
+				var rows = Math.ceil((showMonthDays+showMonthWeek)/cells);
+				//通过上面计算出来的行和列生成表格
+				for (var i = 0; i < rows; i++) {
+					var tr = document.createElement('tr');
+					for (var j=0; j < cells; j++) {
+						var td = document.createElement('td');
+						var v = i*cells + j - (showMonthWeek-1);
+						if (v>0 && v <= showMonthDays) {
+							if ( date.getFullYear() == year && date.getMonth()+1 == mon && date.getDate() == v ) {
+								td.style.color = "red";
+								td.style.fontWeight = "bold";
+							}
+							td.innerHTML = v;
+
+						}else{
+							td.innerHTML = '';
+						}
+						td.ondblclick = function() {
+              text.value = year + '年' + mon + '月' + this.innerHTML + '日';
+           	}
+						tr.appendChild(td);
+
+					}	
+					showTableElement.tBodies[0].appendChild(tr);	
+				}
+			}
+
+			//将数字转化成具体星期几
+			function getWeek(n) {
+				switch(n) {
+					case 0: 
+						return "星期日";
+					case 1: 
+						return "星期一";
+					case 2: 
+						return "星期二";
+					case 3: 
+						return "星期三";
+					case 4: 
+						return "星期四";
+					case 5: 
+						return "星期五";
+					case 6: 
+						return "星期六";
+				}
+			}
+
+			//添0函数
+			function add0(n) {
+				n<10 ? n="0"+n : n=n ;
+				return n ;
+			}
+	</script>
+</body>
+</html>
